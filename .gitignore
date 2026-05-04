@@ -5,3 +5,4 @@ Finch.app/
 DerivedData/
 .DS_Store
 *.swp
+.claude/

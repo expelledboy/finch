@@ -48,7 +48,8 @@ brew install --cask expelledboy/finch/finch
 ```
 
 The cask builds from source on your machine — no Developer ID needed, no
-Gatekeeper warnings.
+Gatekeeper warnings. See [docs/homebrew.md](docs/homebrew.md) for how the
+distribution works and the release process.
 
 **From source:**
 
