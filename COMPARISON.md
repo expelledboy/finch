@@ -123,7 +123,7 @@ the implementation that affect maintainability, performance, and trust.
 | Source LOC | **~700** | ~2,900 | ~4,200 | closed | closed |
 | Languages used | Swift + JS | Go + ObjC + TS | TS (Electron) | unknown | unknown |
 | Binary size | ~500 KB | ~15 MB | ~150 MB | unknown | unknown |
-| Memory footprint | ~10 MB | ~30 MB | ~150 MB | unknown | unknown |
+| Memory footprint | ~17 MB | ~30 MB | ~150 MB | unknown | unknown |
 | Cold start (process launch) | ~480 ms | ~700 ms | ~1.5 s | unknown | unknown |
 | Hot path (resolve a URL) | **~5 µs** | unknown | unknown | unknown | unknown |
 | Bundler / transpiler required | none | Babel + esbuild + goja | Vite + Forge | unknown | unknown |

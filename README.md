@@ -22,7 +22,7 @@ native Swift code so the hot path stays in Swift, not JS.
 |--------------------------|---------------|------------|--------|--------|----------------|
 | Source LOC               | **~700**      | ~2,900     | closed | closed | ~4,200         |
 | Hot-path latency         | **~5 µs**     | unknown    | —      | —      | —              |
-| Memory footprint         | ~10 MB        | ~30 MB     | —      | —      | ~150 MB        |
+| Memory footprint         | ~17 MB        | ~30 MB     | —      | —      | ~150 MB        |
 | Programmable rules       | ✅            | ✅         | 🚧 URL only | ❌     | ❌             |
 | Modern ES2020+ in config | ✅            | ❌ (ES5.1) | —      | —      | —              |
 | Caller app routing       | ✅            | ✅         | ✅     | ✅     | ❌             |
