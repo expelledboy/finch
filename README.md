@@ -39,16 +39,28 @@ Full feature matrix across all 18 alternatives we evaluated:
 
 ## Install
 
-Requires macOS 13+ and Swift 5.9+.
+Requires macOS 13+ and Xcode Command Line Tools (`xcode-select --install`).
+
+**Via Homebrew** (recommended):
 
 ```sh
-git clone https://github.com/anthony/finch ~/repos/finch
-cd ~/repos/finch
+brew install --cask expelledboy/finch/finch
+```
+
+The cask builds from source on your machine — no Developer ID needed, no
+Gatekeeper warnings.
+
+**From source:**
+
+```sh
+git clone https://github.com/expelledboy/finch
+cd finch
 make run
 ```
 
-Then open **System Settings → Desktop & Dock → Default web browser** and select
-Finch. Edit `~/.finch.js` to define your rules.
+Then launch Finch (🐦 in your menu bar), open **System Settings → Desktop &
+Dock → Default web browser** and select Finch. Edit `~/.finch.js` to define
+your rules — see [`examples/finch.example.js`](examples/finch.example.js).
 
 ## Configuration
 
