@@ -48,23 +48,5 @@
                 <string>mailto</string>
             </array>
         </dict>
-    </array>
-
-    <key>CFBundleDocumentTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleTypeName</key>
-            <string>HTML Document</string>
-            <key>CFBundleTypeRole</key>
-            <string>Viewer</string>
-            <key>LSHandlerRank</key>
-            <string>Default</string>
-            <key>LSItemContentTypes</key>
-            <array>
-                <string>public.html</string>
-                <string>public.xhtml</string>
-            </array>
-        </dict>
-    </array>
-</dict>
+    </array></dict>
 </plist>

@@ -63,6 +63,18 @@ Then launch Finch (🐦 in your menu bar), open **System Settings → Desktop &
 Dock → Default web browser** and select Finch. Edit `~/.finch.js` to define
 your rules — see [`examples/finch.example.js`](examples/finch.example.js).
 
+Finch handles `http`, `https`, and `mailto` URLs only — it deliberately does
+not register as a viewer for local HTML files. `open foo.html` is a separate
+LaunchServices binding (`public.html`) that routes to whatever app you've
+chosen via Finder → Get Info → "Open with… → Change All", or programmatically
+with [`duti`](https://github.com/moretension/duti):
+
+```sh
+brew install duti
+duti -s app.zen-browser.zen public.html  all   # replace with your bundle id
+duti -s app.zen-browser.zen public.xhtml all
+```
+
 ## Configuration
 
 Drop a JavaScript file at `~/.finch.js`. See [`examples/finch.example.js`](examples/finch.example.js).
