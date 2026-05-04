@@ -1,0 +1,7 @@
+.build/
+.swiftpm/
+Finch.app/
+*.xcodeproj/
+DerivedData/
+.DS_Store
+*.swp
