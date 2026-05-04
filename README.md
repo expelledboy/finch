@@ -16,6 +16,27 @@ config pipeline). Finch keeps the powerful parts of Finicky's design (graduated
 match types, opener context, URL rewriting) but compiles config helpers to
 native Swift code so the hot path stays in Swift, not JS.
 
+## How Finch compares
+
+|                          | **Finch**     | Finicky    | Velja  | Choosy | Browserosaurus |
+|--------------------------|---------------|------------|--------|--------|----------------|
+| Source LOC               | **~700**      | ~2,900     | closed | closed | ~4,200         |
+| Hot-path latency         | **~5 µs**     | unknown    | —      | —      | —              |
+| Memory footprint         | ~10 MB        | ~30 MB     | —      | —      | ~150 MB        |
+| Programmable rules       | ✅            | ✅         | 🚧 URL only | ❌     | ❌             |
+| Modern ES2020+ in config | ✅            | ❌ (ES5.1) | —      | —      | —              |
+| Caller app routing       | ✅            | ✅         | ✅     | ✅     | ❌             |
+| URL rewriting            | ✅            | ✅         | ✅     | ❌     | ❌             |
+| Tracking-strip helper    | ✅            | 🚧 manual  | ✅     | ❌     | ❌             |
+| Bundler / transpiler     | none          | Babel + esbuild + goja | — | — | Vite + Forge |
+| Open source              | ✅ MIT        | ✅ MIT     | ❌     | ❌     | ✅ (archived)  |
+| Free                     | ✅            | ✅         | $8     | $10    | ✅             |
+| Actively maintained      | ✅            | ✅         | ✅     | ✅     | ❌ (Aug 2025)  |
+
+Full feature matrix across all 18 alternatives we evaluated:
+[COMPARISON.md](COMPARISON.md). Finch's own implementation status and roadmap:
+[FEATURES.md](FEATURES.md).
+
 ## Install
 
 Requires macOS 13+ and Swift 5.9+.
