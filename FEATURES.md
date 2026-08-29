@@ -69,7 +69,7 @@ candidates for future work; features marked ❌ are explicit non-goals.
 | Hot reload | ✅ | `kill -HUP $(pgrep Finch)` or menu bar action |
 | Marker-compiled helpers | ✅ | `domain()`, `from()`, `strip()` compile to native — see [README perf](README.md#performance) |
 | GUI rule builder | ❌ | Out of scope — text config is the primary interface |
-| Request logging | ⬜ | Useful for debugging "why did this URL go there" |
+| Request logging | ✅ | Last 10 routes in the menu bar, in memory; nothing written to disk |
 | Config validation / dry run | 🚧 | `--test` validates routing; no schema validation step |
 | Multiple config files / includes | ⬜ | `require()` support would let users split work/personal |
 | MDM / enterprise deployment | ⬜ | System-wide config search path (`/Library/Application Support/Finch/`) |
@@ -78,7 +78,7 @@ candidates for future work; features marked ❌ are explicit non-goals.
 
 | Feature | Status | Notes |
 |---|---|---|
-| Menu bar icon | ✅ | 🐦 — Reload Config, Quit |
+| Menu bar icon | ✅ | 🐦 — Recent Links, Reload Config, Quit |
 | Background-only operation | ✅ | No Dock icon, `LSUIElement` |
 | Hot reload via signal | ✅ | SIGHUP |
 | Auto-detect installed browsers | ⬜ | Suggest bundle IDs from `LSCopyAllRoleHandlersForContentType` |
@@ -123,7 +123,7 @@ These aren't traditional "features" but are differentiators worth tracking:
 | Property | Status | Notes |
 |---|---|---|
 | Sub-10µs hot path | ✅ | 5µs common case, 8µs with rewrites |
-| ~700 LOC total | ✅ | Compare: Finicky ~2,900, Browserosaurus ~4,200 |
+| ~650 LOC | ✅ | Code only, `make loc`. Compare: Finicky ~2,900, Browserosaurus ~4,200 |
 | No bundler / transpiler | ✅ | Native JSC evaluates ES2020+ directly |
 | Marker-object compilation | ✅ | Helpers return data, not functions; Swift compiles to native |
 | Lazy `ctx` construction | ✅ | 5.7µs object built at most once per resolve |

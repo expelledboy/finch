@@ -82,10 +82,15 @@ We could *partially* automate the last step by calling `LSSetDefaultHandlerForUR
 When shipping a new version of Finch:
 
 ```sh
-# 1. In the finch repo: tag and push
+# 1. In the finch repo: bump the bundle version, THEN tag.
+# The cask builds from the tag's tarball, so a version bumped after tagging
+# ships an app whose About/Info.plist disagrees with the release. This step is
+# how v0.1.0 and v0.1.1 both shipped Info.plist 0.1.0.
 cd ~/repos/github/finch
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 0.2.0" Info.plist
+git commit -am "v0.2.0: what's new"
 git tag v0.2.0 -m "v0.2.0 — what's new"
-git push origin v0.2.0
+git push origin main v0.2.0
 
 # 2. Compute the new tarball SHA
 curl -sL https://github.com/expelledboy/finch/archive/refs/tags/v0.2.0.tar.gz \

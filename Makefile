@@ -29,6 +29,9 @@ test: build
 clean:
 	rm -rf .build $(APP)
 
-# Count source lines
+# Count source lines. The headline figure is CODE lines — comments and blanks
+# excluded — because that is what a reader has to understand.
 loc:
-	@wc -l Sources/Finch/*.swift | tail -1
+	@total=$$(cat Sources/Finch/*.swift | wc -l | tr -d ' '); \
+	code=$$(cat Sources/Finch/*.swift | grep -vcE '^[[:space:]]*(//.*)?$$'); \
+	echo "code $$code   total $$total   (comments+blank $$((total-code)))" 

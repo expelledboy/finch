@@ -120,7 +120,7 @@ the implementation that affect maintainability, performance, and trust.
 
 | Property | Finch | Finicky | Browserosaurus | Velja | Choosy |
 |---|---|---|---|---|---|
-| Source LOC | **~700** | ~2,900 | ~4,200 | closed | closed |
+| Source LOC | **~650** | ~2,900 | ~4,200 | closed | closed |
 | Languages used | Swift + JS | Go + ObjC + TS | TS (Electron) | unknown | unknown |
 | Binary size | ~500 KB | ~15 MB | ~150 MB | unknown | unknown |
 | Memory footprint | ~17 MB | ~30 MB | ~150 MB | unknown | unknown |
@@ -129,6 +129,13 @@ the implementation that affect maintainability, performance, and trust.
 | Bundler / transpiler required | none | Babel + esbuild + goja | Vite + Forge | unknown | unknown |
 | Config file format | JS (native ES2020+) | JS (ES5.1) | JSON | none (GUI) | none (GUI) |
 | Browser interception API | `NSAppleEventManager` | `NSAppleEventManager` | Electron wrapper | unknown | unknown |
+
+**On the LOC row:** Finch's figure is code only — comments and blank lines
+excluded, reproducible with `make loc` (845 lines total, 648 of them code). The
+Finicky and Browserosaurus figures are raw line counts and have not been
+re-measured the same way, so this row reads more favourably to Finch than a
+like-for-like count would. Treat it as an order-of-magnitude difference, not a
+precise ratio.
 
 ---
 

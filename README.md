@@ -3,7 +3,7 @@
 A tiny, fast macOS browser router. Set it as your default browser; it routes
 each URL to the right browser based on rules in `~/.finch.js`.
 
-- **~700 LOC** Swift + a 1.5KB embedded JS URL polyfill
+- **~650 LOC** Swift (code only; `make loc`) + a 1.5KB embedded JS URL polyfill
 - **~5µs** hot-path latency on the common case (well under perceptible)
 - Native `JavaScriptCore`, no bundler, no transpiler, no Electron
 - Config is real JavaScript — simple cases look like data, full power available
@@ -20,7 +20,7 @@ native Swift code so the hot path stays in Swift, not JS.
 
 |                          | **Finch**     | Finicky    | Velja  | Choosy | Browserosaurus |
 |--------------------------|---------------|------------|--------|--------|----------------|
-| Source LOC               | **~700**      | ~2,900     | closed | closed | ~4,200         |
+| Source LOC               | **~650**      | ~2,900     | closed | closed | ~4,200         |
 | Hot-path latency         | **~5 µs**     | unknown    | —      | —      | —              |
 | Memory footprint         | ~17 MB        | ~30 MB     | —      | —      | ~150 MB        |
 | Programmable rules       | ✅            | ✅         | 🚧 URL only | ❌     | ❌             |
@@ -159,6 +159,23 @@ Or use the menu bar icon → Reload Config.
 
 The binary also has `--bench N <url>` for in-process resolve benchmarking.
 
+## Reviewing what got routed
+
+Click the 🐦 menu bar icon: the top section lists the last 10 links Finch
+routed, most recent first, as `host/path → Browser`. Hover for the full URL, the
+app the link came from, and the pre-rewrite URL if a rewrite rule changed it;
+click to copy the URL. A link suppressed by `open: null` shows as `→ blocked`.
+
+The opener shown on hover is the bundle id of the sending app, read from the
+Apple Event's sender pid — the same value `from()` rules match on. A sender that
+is not an app shows its executable name instead (`osascript`), and it is blank
+when the sender cannot be resolved, which in practice means the `open`
+command-line tool: it exits before Finch can look up the process.
+
+This list is in memory only. Nothing is written to disk, and it dies with the
+process — it exists to answer "where did that link just go?", not to keep a
+browsing history.
+
 ## Performance
 
 Measured on Apple Silicon, macOS 15, release build, 100k iterations.
@@ -183,13 +200,20 @@ is only crossed for user-written `(url, ctx) => ...` predicates.
 
 ## Architecture
 
-| File | LOC | Responsibility |
+Code lines per file, comments excluded (`make loc` for the total):
+
+| File | Code | Responsibility |
 |---|---|---|
-| `Sources/Finch/main.swift` | 6 | Bootstrap |
-| `Sources/Finch/AppDelegate.swift` | 112 | Apple Event handler, hot path entry, `NSWorkspace.open` |
-| `Sources/Finch/Loader.swift` | 46 | Read `~/.finch.js`, evaluate via JSC, return module.exports |
-| `Sources/Finch/Helpers.swift` | 101 | Embedded JS prelude: URL polyfill + `domain`/`from`/`strip` helpers |
-| `Sources/Finch/Engine.swift` | 442 | Marker compilation + native hot-path resolver |
+| `Sources/Finch/main.swift` | 5 | Bootstrap |
+| `Sources/Finch/AppDelegate.swift` | 174 | Apple Event handler, hot path entry, `NSWorkspace.open`, menu bar |
+| `Sources/Finch/Loader.swift` | 33 | Read `~/.finch.js`, evaluate via JavaScriptCore, return module.exports |
+| `Sources/Finch/Helpers.swift` | 68 | Embedded JS prelude: URL polyfill + `domain`/`from`/`strip`/`running` helpers |
+| `Sources/Finch/Engine.swift` | 348 | Marker compilation + native hot-path resolver |
+| `Sources/Finch/Recents.swift` | 20 | In-memory list of recent routes for the menu bar |
+
+Why it is shaped this way — the decisions, the non-goals and the macOS
+behaviour the bundle depends on — is in
+[docs/architecture.md](docs/architecture.md).
 
 ## License
 
