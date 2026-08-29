@@ -3,10 +3,14 @@ import Cocoa
 private let kInternetEventClass = AEEventClass(0x4755524C)  // 'GURL'
 private let kAEGetURL           = AEEventID(0x4755524C)     // 'GURL'
 private let keyDirectObject     = AEKeyword(0x2D2D2D2D)     // '----'
+private let keySenderPID        = AEKeyword(0x73706964)     // 'spid'
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var engine: Engine?
     private var statusItem: NSStatusItem?
+    /// bundle id -> human name, so building the menu does not hit LaunchServices
+    /// once per item every time it opens.
+    private var browserNames: [String: String] = [:]
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSAppleEventManager.shared().setEventHandler(
@@ -42,12 +46,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let raw = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
               let engine else { return }
 
-        let opener    = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""
+        let opener    = openerBundleId(from: event)
         let modifiers = NSEvent.modifierFlags
 
         let result = engine.resolve(urlString: raw, opener: opener, modifiers: modifiers)
+        // Rules match on bundle id; the menu prefers it too, but falls back to
+        // the sender's executable name so a non-app sender reads as "osascript"
+        // rather than an unexplained blank.
+        RouteHistory.shared.record(opener: opener.isEmpty ? senderExecutableName(from: event) : opener,
+                               original: raw,
+                               final: result.url.absoluteString,
+                               bundleId: result.browser.bundleId)
         if result.browser.bundleId.isEmpty { return }   // suppressed (open: null)
         open(url: result.url, spec: result.browser)
+    }
+
+    /// Bundle id of the sending app, for `from()` rules and the menu.
+    /// Must come from the event's sender pid, not `frontmostApplication`:
+    /// handling a GURL event makes Finch frontmost, so that answers
+    /// "com.finch.browser" for every link and no `from()` rule can match.
+    private func openerBundleId(from event: NSAppleEventDescriptor) -> String {
+        let mine = Bundle.main.bundleIdentifier
+        if let pid = event.attributeDescriptor(forKeyword: keySenderPID)?.int32Value, pid > 0,
+           let app = NSRunningApplication(processIdentifier: pid),
+           let bundleId = app.bundleIdentifier, bundleId != mine {
+            return bundleId
+        }
+        let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""
+        return front == mine ? "" : front
+    }
+
+    /// Executable name for senders that are not apps and have no bundle id.
+    /// Display-only — `from()` matches bundle ids, never this.
+    private func senderExecutableName(from event: NSAppleEventDescriptor) -> String {
+        guard let pid = event.attributeDescriptor(forKeyword: keySenderPID)?.int32Value, pid > 0
+        else { return "" }
+        var buf = [CChar](repeating: 0, count: 256)
+        guard proc_name(pid, &buf, UInt32(buf.count)) > 0 else { return "" }
+        return String(cString: buf)
     }
 
     private func open(url: URL, spec: BrowserSpec) {
@@ -102,11 +138,79 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem?.button?.title = "🐦"
         let menu = NSMenu()
-        menu.addItem(withTitle: "Reload Config",    action: #selector(reloadConfig),    keyEquivalent: "r")
-        menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Finch",       action: #selector(NSApp.terminate), keyEquivalent: "q")
+        menu.delegate = self          // items built lazily in menuNeedsUpdate
         statusItem?.menu = menu
     }
 
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+
+        let header = NSMenuItem(title: "Recent Links", action: nil, keyEquivalent: "")
+        header.isEnabled = false
+        menu.addItem(header)
+
+        let recent = RouteHistory.shared.recent
+        if recent.isEmpty {
+            let empty = NSMenuItem(title: "  None yet", action: nil, keyEquivalent: "")
+            empty.isEnabled = false
+            menu.addItem(empty)
+        } else {
+            for entry in recent { menu.addItem(recentItem(for: entry)) }
+        }
+
+        menu.addItem(.separator())
+        let reload = NSMenuItem(title: "Reload Config", action: #selector(reloadConfig), keyEquivalent: "r")
+        reload.target = self
+        menu.addItem(reload)
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Quit Finch", action: #selector(NSApp.terminate), keyEquivalent: "q")
+    }
+
+    /// One recent route: "  github.com/foo/bar \u{2192} Chrome". Click copies the URL.
+    private func recentItem(for entry: RouteEntry) -> NSMenuItem {
+        let target = entry.suppressed ? "blocked" : browserName(entry.bundleId)
+        let item = NSMenuItem(title: "  \(shorten(entry.final)) \u{2192} \(target)",
+                              action: #selector(copyRecentURL(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = entry.final
+        var tip = entry.final + "\n\u{2192} " + (entry.suppressed ? "suppressed (open: null)" : entry.bundleId)
+        if !entry.opener.isEmpty { tip += "\nfrom \(entry.opener)" }
+        if entry.rewritten { tip += "\nrewritten from \(entry.original)" }
+        tip += "\n\nClick to copy URL"
+        item.toolTip = tip
+        return item
+    }
+
+    /// Drop the scheme and elide the middle — menu items are read at a glance.
+    private func shorten(_ url: String, max: Int = 52) -> String {
+        var s = url
+        for prefix in ["https://", "http://"] where s.hasPrefix(prefix) {
+            s = String(s.dropFirst(prefix.count))
+        }
+        if s.hasPrefix("www.") { s = String(s.dropFirst(4)) }
+        guard s.count > max else { return s }
+        return "\(s.prefix(max - 18))\u{2026}\(s.suffix(15))"
+    }
+
+    private func browserName(_ bundleId: String) -> String {
+        if let cached = browserNames[bundleId] { return cached }
+        let name: String
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
+            name = FileManager.default.displayName(atPath: url.path)
+                .replacingOccurrences(of: ".app", with: "")
+        } else {
+            name = bundleId   // not installed — the raw id is the useful bit here
+        }
+        browserNames[bundleId] = name
+        return name
+    }
+
     @objc private func reloadConfig() { reloadEngine() }
+
+    @objc private func copyRecentURL(_ sender: NSMenuItem) {
+        guard let url = sender.representedObject as? String else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(url, forType: .string)
+    }
+
 }
